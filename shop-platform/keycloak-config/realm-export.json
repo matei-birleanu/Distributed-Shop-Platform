@@ -1,0 +1,104 @@
+{
+  "realm": "shop-platform",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Administrator role with full access"
+      },
+      {
+        "name": "user",
+        "description": "Regular user role"
+      },
+      {
+        "name": "visitor",
+        "description": "Visitor role with limited access"
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@shop.com",
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin"],
+      "clientRoles": {
+        "shop-client": ["admin"]
+      }
+    },
+    {
+      "username": "user",
+      "enabled": true,
+      "email": "user@shop.com",
+      "emailVerified": true,
+      "firstName": "Regular",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "shop-client": ["user"]
+      }
+    },
+    {
+      "username": "visitor",
+      "enabled": true,
+      "email": "visitor@shop.com",
+      "emailVerified": true,
+      "firstName": "Guest",
+      "lastName": "Visitor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "visitor123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["visitor"],
+      "clientRoles": {
+        "shop-client": ["visitor"]
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "shop-client",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "shop-client-secret",
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "fullScopeAllowed": true
+    }
+  ]
+}
+

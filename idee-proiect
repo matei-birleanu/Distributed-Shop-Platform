@@ -1,0 +1,77 @@
+Proiect SCD
+Bîrleanu Teodor Matei
+343C3
+
+În cadrul proiectului voi implementa o platformă pentru shopping online. Această platformă va permite:
+cumpararea de produse
+punerea la vanzare a produselor 
+plata lor printr un portal de plata
+cautarea printr un motor de cautare avansat pentru rezultate cat mai bune
+
+Pentru a implementa aceste functionalități, soluția va expune următoarele rute:
+GET /products – verifică dacă un produs e în stoc:
+E o operație doar de citire, fără efecte secundare. 
+Exemplu: 
+GET /products/{id} sau 
+GET /stock?productId={id} 
+Răspuns: info despre produs + câte bucăți mai sunt.
+
+	
+      2. POST /orders – cumpără produsul
+Creează o „tranzacție” nouă (o comandă, un purchase).
+Nu e idempotentă (dacă faci același request de 2 ori, cumperi de 2 ori).
+Exemplu:
+POST /orders cu body: { "productId": 123, "quantity": 2 }
+sau, mai REST: POST /orders.
+      3. POST /sell – clientul vinde un produs magazinului
+Tot o tranzacție nouă, dar de tip „buy-back” pentru magazin.
+Nu e idempotentă (dacă faci același request de 2 ori, cumperi de 2 ori).
+Exemplu:
+POST /orders cu body: { "productId": 123, "quantity": 2 }
+sau, mai REST: POST /orders.
+     4. PUT /products/{id}/price - schimbă prețul unui produs
+Exemplu:
+PUT /products/{id}/price cu body { "price": 99.99 }.
+
+
+      5. PUT /products/{id}/stock - schimbă cantitatea unui produs
+Exemplu:
+PUT /products/{id}/stock cu { "quantity": 50 }
+  
+    
+
+    6. GET /products/search?query=
+Parametri query:
+query – textul introdus de user (căutare full-text pe nume, descriere, tags)
+
+
+category – (opțional) filtrează pe o anumită categorie
+
+
+minPrice, maxPrice – (opțional) filtrare pe interval de preț
+
+
+
+Disponibil doar pentru administrator
+ DELETE /products/{productId} - sterge un produs
+GET /order 
+listează toate comenzile (cu filtre: status=pending, date-from, etc.).
+GET /orders/{orderId}
+GET /users
+ Listează utilizatorii.
+GET /users/{userId}
+
+Voi replica serviciile Product Service si Order Service. Fiecare va avea 2 replici.
+Momentan am urmatoarele roluri: vizitator, admin si user autentificat.
+Ca funcții avansate voi implementa
+
+Sistem de cautare rapida: 
+Voi folosi Elastic Search pentru o cautare eficienta a produselor si pe baza descrierilor
+Sistem asincron de management al platilor:
+Voi folosi ca procesator de plata Stripe.
+
+
+
+
+
+

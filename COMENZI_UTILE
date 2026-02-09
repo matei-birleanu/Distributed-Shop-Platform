@@ -1,0 +1,105 @@
+export API="http://localhost:5000"
+
+
+curl -s "$API/products" | python3 -m json.tool
+
+open http://localhost:5000/auth/login
+
+curl -s http://localhost:5000/products \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+
+curl -s -X POST http://localhost:5000/sell \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "product_id": 1,
+    "quantity": 2
+  }' | python3 -m json.tool
+
+
+curl -s -X POST "http://localhost:5000/admin/products" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "stick memorie",
+    "description": "stick memorie super performant",
+    "price": 250,
+    "stock": 1000,
+    "category": "media"
+  }' | python3 -m json.tool
+
+
+ORDER_JSON=$(curl -s -X POST "http://localhost:5000/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"product_id": 1, "quantity": 2, "requires_payment": true}')
+
+echo "$ORDER_JSON" | python3 -m json.tool
+ORDER_ID = pun de mana aici
+
+curl -s "http://localhost:5000/orders/12" \
+  -H "Authorization: Bearer $USER_TOKEN" | python3 -m json.tool
+
+
+
+curl -s "http://localhost:5000/products/search/advanced?query=laptop" \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+
+
+ADMIN_TOKEN=$(curl -s -X POST "http://localhost:8080/realms/shop-platform/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=shop-client" \
+  -d "client_secret=shop-client-secret" \
+  -d "grant_type=password" \
+  -d "username=admin" \
+  -d "password=admin123" \
+  -d "scope=openid profile email" | python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])")
+
+
+USER_TOKEN=$(curl -s -X POST "http://localhost:8080/realms/shop-platform/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=shop-client" \
+  -d "client_secret=shop-client-secret" \
+  -d "grant_type=password" \
+  -d "username=user" \
+  -d "password=user123" \
+  -d "scope=openid profile email" | python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])")
+
+
+
+  curl -s -X PUT "http://localhost:5000/admin/products/4" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "stick memorie UPDATE",
+    "description": "descriere noua",
+    "price": 300,
+    "stock": 500,
+    "category": "media"
+  }' | python3 -m json.tool
+//
+update price
+ curl -s -X PUT "http://localhost:5000/admin/products/4/price" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"price": 300}' | python3 -m json.tool
+
+// update stock
+curl -s -X PUT "$API/admin/products/4/stock" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"stock": 1000}' | python3 -m json.tool
+
+sterge elemenete
+ curl -s -X DELETE "$API/admin/products/1" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | python3 -m json.tool
+
+
+
+docker build -t shop-api-gateway:latest -f api-gateway/Dockerfile .
+docker build -t shop-product-service:latest -f product-service/Dockerfile .
+docker build -t shop-order-service:latest -f order-service/Dockerfile .
+
+docker swarm init
+set -a && source .env && set +a
+docker stack deploy -c docker-compose.yml shop-platform

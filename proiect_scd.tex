@@ -1,0 +1,170 @@
+\documentclass[12pt,a4paper]{article}
+
+% Pachete
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{enumitem}
+
+% Configurare pagina
+\geometry{
+    left=2cm,
+    right=2cm,
+    top=2cm,
+    bottom=2cm
+}
+
+% Titlu
+\title{\textbf{Shop Platform - Microservicii REST API}}
+\author{Matei - Facultatea de Automatica si Calculatoare}
+\date{Ianuarie 2026}
+
+\begin{document}
+
+\maketitle
+
+\section*{Descriere}
+
+Shop Platform este o aplicatie e-commerce distribuita construita pe arhitectura de microservicii. Sistemul include autentificare SSO (Keycloak), cautare avansata (Elasticsearch), procesare plati online (Stripe) si orchestrare cu Docker Swarm. Platforma ofera functionalitati complete de gestiune produse, comenzi si plati.
+
+\section*{Rute Disponibile}
+
+\subsection*{Autentificare}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{GET /auth/login} - Initiaza SSO flow cu Keycloak
+    \item \texttt{GET /auth/callback} - Callback autentificare, schimb token JWT
+    \item \texttt{GET /auth/logout} - Logout si invalidare sesiune
+    \item \texttt{GET /auth/userinfo} - Informatii user curent
+\end{itemize}
+
+\subsection*{Produse - Toate Rolurile}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{GET /products} - Lista toate produsele (paginare suportata)
+    \item \texttt{GET /products/:id} - Detalii produs specific
+    \item \texttt{GET /products/category/:category} - Filtrare dupa categorie
+    \item \texttt{GET /products/search/advanced} - Cautare Elasticsearch cu fuzzy matching
+    \item \texttt{GET /products/search/autocomplete} - Sugestii autocomplete
+\end{itemize}
+
+\subsection*{Produse - Admin}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{POST /admin/products} - Creare produs nou
+    \item \texttt{DELETE /admin/products/:id} - Stergere produs
+    \item \texttt{PUT /admin/products/:id/price} - Actualizare pret
+    \item \texttt{PUT /admin/products/:id/stock} - Actualizare stoc
+\end{itemize}
+
+\subsection*{Comenzi - User}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{GET /orders} - Lista comenzi proprii
+    \item \texttt{GET /orders/:id} - Detalii comanda specifica
+    \item \texttt{POST /orders} - Creare comanda (buy sau sell cu \texttt{order\_type})
+\end{itemize}
+
+\subsection*{Comenzi - Admin}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{GET /admin/orders} - Lista toate comenzile sistemului
+    \item \texttt{GET /admin/orders/:id} - Detalii orice comanda
+\end{itemize}
+
+\subsection*{Webhooks si Health}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{POST /webhooks/stripe} - Webhook procesare plati Stripe
+    \item \texttt{GET /} - Health check API Gateway
+    \item \texttt{GET /health} - Health check servicii
+\end{itemize}
+
+\section*{De ce este REST API?}
+
+Acest API respecta principiile REST (Representational State Transfer) conform disertației lui Roy Fielding:
+
+\subsection*{1. Resurse Identificabile prin URI}
+Fiecare resursa (produs, comanda) are un URI unic predictibil:
+\begin{itemize}[leftmargin=*]
+    \item \texttt{/products/1} identifica produsul cu ID 1
+    \item \texttt{/orders/5} identifica comanda cu ID 5
+    \item Structura ierarhica clara: \texttt{/admin/products} vs \texttt{/products}
+\end{itemize}
+
+\subsection*{2. Metode HTTP Semantice}
+Operatiile CRUD folosesc metodele HTTP standard:
+\begin{itemize}[leftmargin=*]
+    \item \texttt{GET} - citire date (idempotent)
+    \item \texttt{POST} - creare resurse (non-idempotent)
+    \item \texttt{PUT} - actualizare (idempotent)
+    \item \texttt{DELETE} - stergere (idempotent)
+\end{itemize}
+
+\subsection*{3. Comunicare Stateless}
+Serverul NU pastreaza starea sesiunii. Fiecare request contine JWT token in header \texttt{Authorization: Bearer <token>} cu toate informatiile necesare (user\_id, roles). Token-ul este self-contained si verificat la fiecare request.
+
+\subsection*{4. Reprezentari JSON}
+Toate request-urile si response-urile folosesc format JSON standard cu header \texttt{Content-Type: application/json}. Structurile sunt consistente si documentate.
+
+\subsection*{5. Status Codes Semantice}
+API-ul foloseste coduri HTTP standard pentru comunicare clara:
+\begin{itemize}[leftmargin=*]
+    \item \texttt{200 OK} - operatie reusita
+    \item \texttt{201 Created} - resursa creata cu succes
+    \item \texttt{400 Bad Request} - date invalide
+    \item \texttt{401 Unauthorized} - lipseste sau este invalid token-ul
+    \item \texttt{403 Forbidden} - utilizator fara permisiuni
+    \item \texttt{404 Not Found} - resursa nu exista
+    \item \texttt{500 Internal Server Error} - eroare server
+\end{itemize}
+
+\subsection*{6. Interfata Uniforma}
+API-ul mentine consistenta:
+\begin{itemize}[leftmargin=*]
+    \item Toate colectiile returneaza liste: \texttt{\{"products": [...], "count": 10\}}
+    \item Erorile au format uniform: \texttt{\{"error": "mesaj"\}}
+    \item Structura URL-urilor este predictibila si logica
+\end{itemize}
+
+\subsection*{7. HATEOAS si Filtrare}
+\begin{itemize}[leftmargin=*]
+    \item Suport paginare: \texttt{?page=1\&per\_page=10}
+    \item Filtrare: \texttt{?category=electronice\&minPrice=500}
+    \item Sortare: \texttt{?sort=price\_asc}
+    \item Links in response pentru plati: \texttt{"checkout\_url": "https://..."}
+\end{itemize}
+
+\subsection*{8. Idempotenta}
+Metodele GET, PUT, DELETE sunt idempotente (aceeasi actiune repetata produce acelasi efect). POST este non-idempotent (creeaza resurse noi la fiecare apel).
+
+\section*{Exemplu Flow Complet}
+
+\textbf{Plasare comanda cu plata:}
+\begin{enumerate}
+    \item User obtine token: \texttt{POST /auth/login}
+    \item User creeaza comanda: \texttt{POST /orders} cu body \texttt{\{"product\_id": 1, "requires\_payment": true\}}
+    \item API returneaza \texttt{201 Created} + \texttt{checkout\_url}
+    \item User plateste in browser pe Stripe
+    \item Stripe trimite webhook: \texttt{POST /webhooks/stripe}
+    \item API actualizeaza comanda automat la status \texttt{completed}
+\end{enumerate}
+
+Flow-ul demonstreaza comunicare stateless (token in fiecare request), status codes corecte (201), reprezentari JSON si operatii asincrone (webhook).
+
+\section*{Tehnologii}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Backend:} Python 3.13, Flask 3.1.2, SQLAlchemy 2.0
+    \item \textbf{Autentificare:} Keycloak 23.0 (OAuth2, OIDC, JWT, PKCE)
+    \item \textbf{Cautare:} Elasticsearch 8.11.1 (fuzzy matching, autocomplete)
+    \item \textbf{Plati:} Stripe API (Checkout Sessions, webhooks)
+    \item \textbf{Baza date:} PostgreSQL 16
+    \item \textbf{Deployment:} Docker Swarm (2 replicas per serviciu)
+\end{itemize}
+
+\section*{Arhitectura Microservicii}
+
+Trei servicii independente:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{API Gateway (5000)} - Autentificare, routing, load balancing
+    \item \textbf{Product Service (5001)} - CRUD produse, integrare Elasticsearch
+    \item \textbf{Order Service (5002)} - Gestiune comenzi, integrare Stripe
+\end{itemize}
+
+Comunicarea inter-servicii se face prin HTTP requests interne (Docker overlay network). Fiecare serviciu poate fi scalat independent (2 replicas pentru high availability).
+
+\end{document}
